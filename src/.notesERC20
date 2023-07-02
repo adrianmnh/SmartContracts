@@ -84,7 +84,7 @@ private - can be accessed only from this contract
     //  * @dev Returns the amount of tokens owned by `account`.
     //  */
     function balanceOf(address account) external view returns(uint256){
-        require(balances[account] != null, "Error: No such account");
+        require(balances[account] != NULL, "Error: No such account");
         return balances[account];
     }
 
@@ -99,7 +99,7 @@ private - can be accessed only from this contract
         require(balances[msg.sender] >= amount, "Token: Not enough funds in wallet");
         balances[msg.sender] -= amount;
         balances[to] += amount;
-        emit Transfer(msg.sender, to, amount);]
+        emit Transfer(msg.sender, to, amount);
         return true;
     }
 
@@ -129,9 +129,9 @@ private - can be accessed only from this contract
     //  * Emits an {Approval} event.
     //  */
     function approve(address spender, uint256 amount) external returns(bool){
-        allowance()
+        // allowance()
 
-        Approval(msg.sender, spender, amount);
+        emit Approval(msg.sender, spender, amount);
         return true;
 
     }
