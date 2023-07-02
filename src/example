@@ -1,0 +1,35 @@
+-----
+interface ABC{
+
+    function name()public returns();
+    
+    event A();
+
+}
+
+---------
+
+contract MyABC is ABC{
+
+    function MyABC() 
+    or
+    constructor()
+
+    function name() public returns(){}
+    or 
+    function name() public returns(){}
+
+
+
+}
+
+
+-------
+
+contract Token {
+
+
+
+
+
+}

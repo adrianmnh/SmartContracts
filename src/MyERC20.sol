@@ -1,0 +1,165 @@
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.13;
+
+import "./IERC20.sol";
+
+
+// EIP - "Ethereum Improve Proposal"
+// ERC - “Ethereum Request for Comment 20” - proposed by Fabian Vogelsteller(2015).
+// ERC-20 standard defines a set of rules developers can follow 
+// to create their own tokens on the Ethereum Blockchain
+// IERC - ERC Interface
+
+// DAO - "Decentralized Autonomous Organization"
+
+
+/*
+    event Transfer(address indexed from, address indexed to, uint256 value);
+
+    indexed parameters - for logged events, allow to search parameters as filters
+
+*/
+
+/**
+ *  Exercise: [1] Write a smart contract that implements the ERC-20 standard.
+ *            [2] Create a file `src/test/Token.t.sol` and write test cases for your ERC-20 smart contract.
+ *                Look at the test case for exercise-1 as reference.
+ *                
+**/
+abstract contract MyERC20 is IERC20 {
+
+    /* datatype visibility _name */
+    string private name;
+    string private symbol;
+    uint8 public decimals;
+    uint256 private totalSupply;
+    mapping(address => uint256) private balances;
+
+    // constructor MyERC20(string _name) public {
+        
+
+    // }
+    constructor(){
+        totalSupply = 10_000_000;
+        name = "RadToken";
+        symbol = "RT";
+        decimals = 4;
+    }
+
+
+/*
+function test(uint[20] a) public returns (uint){
+        return a[10]*2;
+}
+
+function test2(uint[20] a) external returns (uint){
+        return a[10]*2;
+}
+
+Calling each function, public uses 496 gas, external uses 261.
+
+public functions in Solidity immediately copies array arguments to memory
+external functions can read directly from calldata
+Memory allocation is expensive, whereas reading from calldata is cheap.
+
+public functions may be called internally, entirely different process than external calls. Internal calls are executed via jumps in the code, and array arguments are passed internally by pointers to memory. Thus, when the compiler generates the code for an internal function, that function expects its arguments to be located in memory.
+
+public - all can access
+
+external - Cannot be accessed internally, only externally
+
+internal - only this contract and contracts deriving from it can access
+
+private - can be accessed only from this contract
+*/
+
+    // /**
+    //  * @dev Returns the amount of tokens in existence.
+    //  */
+    function totalSupply() external view override returns (uint256) {
+        return totalSupply;
+    }
+
+    // /**
+    //  * @dev Returns the amount of tokens owned by `account`.
+    //  */
+    function balanceOf(address account) external view returns(uint256){
+        require(balances[account] != null, "Error: No such account");
+        return balances[account];
+    }
+
+    // /**
+    //  * @dev Moves `amount` tokens from the caller's account to `to`.
+    //  *
+    //  * Returns a boolean value indicating whether the operation succeeded.
+    //  *
+    //  * Emits a {Transfer} event.
+    //  */
+    function transfer(address to, uint256 amount) external returns (bool){
+        require(balances[msg.sender] >= amount, "Token: Not enough funds in wallet");
+        balances[msg.sender] -= amount;
+        balances[to] += amount;
+        emit Transfer(msg.sender, to, amount);]
+        return true;
+    }
+
+    // /**
+    //  * @dev Returns the remaining number of tokens that `spender` will be
+    //  * allowed to spend on behalf of `owner` through {transferFrom}. This is
+    //  * zero by default.
+    //  *
+    //  * This value changes when {approve} or {transferFrom} are called.
+    //  */
+    function allowance(address owner, address spender) external view returns (uint256){
+
+    }
+
+    // /**
+    //  * @dev Sets `amount` as the allowance of `spender` over the caller's tokens.
+    //  *
+    //  * Returns a boolean value indicating whether the operation succeeded.
+    //  *
+    //  * IMPORTANT: Beware that changing an allowance with this method brings the risk
+    //  * that someone may use both the old and the new allowance by unfortunate
+    //  * transaction ordering. One possible solution to mitigate this race
+    //  * condition is to first reduce the spender's allowance to 0 and set the
+    //  * desired value afterwards:
+    //  * https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
+    //  *
+    //  * Emits an {Approval} event.
+    //  */
+    function approve(address spender, uint256 amount) external returns(bool){
+        allowance()
+
+        Approval(msg.sender, spender, amount);
+        return true;
+
+    }
+
+    // /**
+    //  * @dev Moves `amount` tokens from `from` to `to` using the
+    //  * allowance mechanism. `amount` is then deducted from the caller's
+    //  * allowance.
+    //  *
+    //  * Returns a boolean value indicating whether the operation succeeded.
+    //  *
+    //  * Emits a {Transfer} event.
+    //  */
+    function transferFrom(address spender, address to, uint256 amount) external returns(bool){
+        require(balanceOf(spender)>=amount, "Error: not enough funds");
+
+
+    }
+
+
+
+
+
+
+    
+    // /**
+    //  * @dev Emitted when the allowance of a `spender` for an `owner` is set by
+    //  * a call to {approve}. `value` is the new allowance.
+    //  */
+    // event Approval(address indexed owner, address indexed spender, uint256 value);
+}
