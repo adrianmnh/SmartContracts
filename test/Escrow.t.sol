@@ -5,84 +5,107 @@ import "forge-std/Test.sol";
 
 contract EscrowTest is Test{
     Token token;
-    Escrow escrow;
-    address alice;
+    EscrowV2 escrow;
+    address payable alice;
     address payable bob;
 
     function setUp() public {
 
         token = new Token();
-        alice = address(0x11021991);
-        bob = payable(address(0x12011991));
-        bob.transfer(1_000_000_999 gwei);
-
-        token.fund(alice, 199);
-
-        vm.prank(alice);
-        token.approve(bob, 10);
-        assert(token.allowance(alice, bob) == 10);
+        alice = payable(address(0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA));
+        bob = payable(address(0xBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB));
+        vm.deal(bob, 1.1 ether);
+        
+        token.fund(alice, 100_000);
+        
 
         vm.prank(bob);
-        escrow = new Escrow{value:1 ether}(1 ether, alice, address(token), 10, 1);
+        escrow = new EscrowV2(alice, address(token), 10_000, 5);
 
+        vm.prank(alice);
+        token.approve(address(escrow), 10_000);
     }
 
     function test_setup() public view {
-        assert(token.balanceOf(alice) == 199);
+        assert(token.balanceOf(alice) == 100_000);
+        assert(token.allowance(alice, address(escrow)) == 10_000);
     }
 
-    function test_initial_ether() public view {
+    function test_before_executeEscrow() public {
+        assertTrue(token.balanceOf(alice) == 100_000);
+        assertTrue(token.balanceOf(bob) == 0);
+        assert(bob.balance == 1.1 ether);
+        assert(alice.balance == 0 ether);
+        assert(address(escrow).balance == 0 ether);      
+    }
 
-        assert(address(bob).balance == 999 gwei);
-        assert(address(alice).balance == 0 ether);
-        assert(address(escrow).balance == 1 ether);      
-
+    function test_fund_escrow() public {
+        vm.prank(bob);
+        escrow.fundEscrow{value:1 ether}();
+        assertTrue(address(escrow).balance == 1 ether);
+        assertTrue(address(bob).balance == 0.1 ether);
     }
     
-    function test_balances_after() public {
-
+    function test_execute_escrow() public {
+        test_fund_escrow();
         vm.prank(alice);
-	    escrow.executeEscrow();
-        assert(address(alice).balance == 1 ether);
-        assert(address(escrow).balance == 0 ether);
+        escrow.executeEscrow();
+    }
+
+    function test_balances_after() public {
+        test_execute_escrow();
+        assertTrue(address(escrow).balance == 0 ether);
+        assertTrue(address(alice).balance == 1 ether);
+        assertTrue(address(bob).balance == 0.1 ether);
+        assertTrue(token.balanceOf(alice) == 90_000);
+        assertTrue(token.balanceOf(bob) == 10_000);
     }
 
     function test_execute_wrong_sender() public {
+        vm.expectRevert();
         vm.prank(bob);
         escrow.executeEscrow();
     }
 
     function test_withdraw_wrong_sender() public {
+        vm.expectRevert();
         vm.prank(alice);
         escrow.withdrawEther();
     }
 
     function test_withdraw_before_expiry() public {
         vm.prank(bob);
+        escrow.fundEscrow{value:1 ether}();
+        vm.expectRevert();
+        vm.prank(bob);
         escrow.withdrawEther();
     }
 
     function test_withdraw_after_expiry() public {
-        escrow.passTime();
-        vm.prank(bob);
+        vm.startPrank(bob);
+        escrow.fundEscrow{value:1 ether}();
+        vm.warp(block.timestamp + 5 days);
         escrow.withdrawEther();
-        assert(address(bob).balance == 1_000_000_999 gwei);
+        assert(address(bob).balance == 1.1 ether );
         assert(address(alice).balance == 0 ether);
         assert(address(escrow).balance == 0 ether);      
     }
 
     function test_escrow_already_executed() public {
-        vm.startPrank(alice);
+        test_execute_escrow();
+        vm.expectRevert();
+        vm.prank(alice);
         escrow.executeEscrow();
-        escrow.executeEscrow();
-        vm.stopPrank();
     }
 
     function test_escrow_already_withdrawn() public {
-        escrow.passTime();
-        vm.startPrank(bob);
+        vm.prank(bob);
+        escrow.fundEscrow{value:1 ether}();
+        vm.warp(block.timestamp + 5 days);
+        vm.prank(bob);
         escrow.withdrawEther();
+        vm.expectRevert();
+        vm.prank(bob);
         escrow.withdrawEther();
-        vm.stopPrank();
     }
 }

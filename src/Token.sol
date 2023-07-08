@@ -1,14 +1,9 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
+
 pragma solidity ^0.8.13;
 
 import "./IERC20.sol";
 
-/**
- *  Exercise: [1] Write a smart contract that implements the ERC-20 standard.
- *            [2] Create a file `src/test/Token.t.sol` and write test cases for your ERC-20 smart contract.
- *                Look at the test case for exercise-1 as reference.
- *                
-**/
 
 contract Token is IERC20 {
     
@@ -22,26 +17,39 @@ contract Token is IERC20 {
     mapping (address => mapping(address => uint256)) private _allowances;
     
     constructor() {
-        _name = "MyToken";
-        _symbol = "MTT";
-        _decimals = 8;
-        _totalSupply = 2_000_000_000_000;
+        _name = "Dynamic Energy Fusion Token";
+        _symbol = "DEFT";
+        _decimals = 18;
+        _totalSupply = 20_000_000_000 * 10**_decimals;
         _availableSupply = _totalSupply;
         _supplyAddress = msg.sender;
         _balances[_supplyAddress] = _availableSupply;
     }
 
-    function fund(address to, uint256 amount) external returns (bool){
-        require(_totalSupply >= amount, "Not enough Token supply");
-        _availableSupply -= amount;
-        _balances[_supplyAddress] -= amount;
-        
-        assert(_balances[_supplyAddress] == _availableSupply);
-        
+    modifier ownerOnly () {
+        require(msg.sender == _supplyAddress);
+        _;
+    }
 
-        _balances[to] += amount;
-        emit Transfer(msg.sender, to, amount);
+    function fund(address to, uint256 amount) external returns (bool){
+        require(msg.sender == _supplyAddress, "Only owner can fund");
+        require(_totalSupply >= amount, "Not enough Token supply");
+        require(msg.sender != to, "Not allowed");
+
+        _availableSupply -= amount;
+
+        _transfer(_supplyAddress, to, amount);
+
         return true;
+    }
+
+    function _transfer(address from, address to, uint256 amount) internal {
+        require(to != address(0), "Invalid recipient address");
+        require(_balances[from] >= amount, "Not enough balance");
+        _balances[from] -= amount;
+        _balances[to] += amount;
+        emit Transfer(from, to, amount); 
+
     }
 
     function availableSupply() external view returns(uint256) {
@@ -57,12 +65,7 @@ contract Token is IERC20 {
     }
 
     function transfer(address to, uint256 amount) external returns (bool){
-        // require(to != address(0), "Invalid recipient address");
-        require(_balances[msg.sender] >= amount, "Insufficient funds");
-
-        _balances[msg.sender] -= amount;
-        _balances[to] += amount;
-        emit Transfer(msg.sender, to, amount);
+        _transfer(msg.sender, to, amount);
         return true;
     }
 
@@ -77,12 +80,11 @@ contract Token is IERC20 {
     }
 
     function transferFrom(address from, address to, uint256 amount) external returns (bool){
-        require(_allowances[from][to] >= amount, "Not enough allowance");
-        require(_balances[from] >= amount, "Not enough balance");
-        _balances[from] -= amount;
-        _balances[to] += amount;
-        _allowances[from][to] -= amount;
-        emit Transfer(from, to, amount);       
+        if(msg.sender != from){
+            require(_allowances[from][msg.sender] >= amount, "Not enough allowance");
+            _allowances[from][msg.sender] -= amount;
+        }
+        _transfer(from, to, amount);     
         return true;
     }
 }
